@@ -8,8 +8,6 @@
 #include <opencv2/core/utils/trace.private.hpp>
 #include <opencv2/core/utils/configuration.private.hpp>
 
-#include <opencv2/core/opencl/ocl_defs.hpp>
-
 #include <cstdarg> // va_start
 
 #include <sstream>
@@ -598,7 +596,7 @@ void Region::destroy()
 #endif
 #ifdef HAVE_OPENCL
         case REGION_FLAG_IMPL_OPENCL:
-            if (param_synchronizeOpenCL && cv::ocl::isOpenCLActivated())
+            if (param_synchronizeOpenCL && cv::ocl::useOpenCL())
                 cv::ocl::finish();
             myCodePath = Impl::CODE_PATH_OPENCL;
             break;

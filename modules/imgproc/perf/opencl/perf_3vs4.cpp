@@ -40,7 +40,7 @@ OCL_PERF_TEST_P(_3vs4_Fixture, Resize,
 
     if (mode == Pure)
     {
-        OCL_TEST_CYCLE() resize(src, dst, Size(), 0.5, 0.5, INTER_LINEAR_EXACT);
+        OCL_TEST_CYCLE() resize(src, dst, Size(), 0.5, 0.5, INTER_LINEAR);
     }
     else if (mode == Split)
     {
@@ -57,7 +57,7 @@ OCL_PERF_TEST_P(_3vs4_Fixture, Resize,
             split(src, srcs);
 
             for (size_t i = 0; i < srcs.size(); ++i)
-                resize(srcs[i], dsts[i], Size(), 0.5, 0.5, INTER_LINEAR_EXACT);
+                resize(srcs[i], dsts[i], Size(), 0.5, 0.5, INTER_LINEAR);
 
             merge(dsts, dst);
         }
@@ -70,7 +70,7 @@ OCL_PERF_TEST_P(_3vs4_Fixture, Resize,
         OCL_TEST_CYCLE()
         {
             cvtColor(src, src4, COLOR_RGB2RGBA);
-            resize(src4, dst4, Size(), 0.5, 0.5, INTER_LINEAR_EXACT);
+            resize(src4, dst4, Size(), 0.5, 0.5, INTER_LINEAR);
             cvtColor(dst4, dst, COLOR_RGBA2RGB);
         }
     }

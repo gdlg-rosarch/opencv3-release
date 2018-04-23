@@ -33,7 +33,6 @@ TEST(hal_intrin, uint8x16) {
         .test_pack_u<1>().test_pack_u<2>().test_pack_u<3>().test_pack_u<8>()
         .test_unpack()
         .test_extract<0>().test_extract<1>().test_extract<8>().test_extract<15>()
-        .test_rotate<0>().test_rotate<1>().test_rotate<8>().test_rotate<15>()
         ;
 }
 
@@ -55,7 +54,6 @@ TEST(hal_intrin, int8x16) {
         .test_pack<1>().test_pack<2>().test_pack<3>().test_pack<8>()
         .test_unpack()
         .test_extract<0>().test_extract<1>().test_extract<8>().test_extract<15>()
-        .test_rotate<0>().test_rotate<1>().test_rotate<8>().test_rotate<15>()
         ;
 }
 
@@ -83,7 +81,6 @@ TEST(hal_intrin, uint16x8) {
         .test_pack_u<1>().test_pack_u<2>().test_pack_u<7>().test_pack_u<16>()
         .test_unpack()
         .test_extract<0>().test_extract<1>().test_extract<4>().test_extract<7>()
-        .test_rotate<0>().test_rotate<1>().test_rotate<4>().test_rotate<7>()
         ;
 }
 
@@ -110,7 +107,6 @@ TEST(hal_intrin, int16x8) {
         .test_pack<1>().test_pack<2>().test_pack<7>().test_pack<16>()
         .test_unpack()
         .test_extract<0>().test_extract<1>().test_extract<4>().test_extract<7>()
-        .test_rotate<0>().test_rotate<1>().test_rotate<4>().test_rotate<7>()
         ;
 }
 
@@ -136,7 +132,6 @@ TEST(hal_intrin, uint32x4) {
         .test_pack<1>().test_pack<2>().test_pack<15>().test_pack<32>()
         .test_unpack()
         .test_extract<0>().test_extract<1>().test_extract<2>().test_extract<3>()
-        .test_rotate<0>().test_rotate<1>().test_rotate<2>().test_rotate<3>()
         .test_transpose()
         ;
 }
@@ -160,7 +155,6 @@ TEST(hal_intrin, int32x4) {
         .test_pack<1>().test_pack<2>().test_pack<15>().test_pack<32>()
         .test_unpack()
         .test_extract<0>().test_extract<1>().test_extract<2>().test_extract<3>()
-        .test_rotate<0>().test_rotate<1>().test_rotate<2>().test_rotate<3>()
         .test_float_cvt32()
         .test_float_cvt64()
         .test_transpose()
@@ -176,7 +170,6 @@ TEST(hal_intrin, uint64x2) {
         .test_shift<1>().test_shift<8>()
         .test_logic()
         .test_extract<0>().test_extract<1>()
-        .test_rotate<0>().test_rotate<1>()
         ;
 }
 
@@ -187,7 +180,6 @@ TEST(hal_intrin, int64x2) {
         .test_shift<1>().test_shift<8>()
         .test_logic()
         .test_extract<0>().test_extract<1>()
-        .test_rotate<0>().test_rotate<1>()
         ;
 }
 

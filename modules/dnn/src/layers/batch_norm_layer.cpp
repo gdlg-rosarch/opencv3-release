@@ -102,14 +102,6 @@ public:
                backendId == DNN_BACKEND_HALIDE && haveHalide();
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr)
-    {
-        CV_TRACE_FUNCTION();
-        CV_TRACE_ARG_VALUE(name, "name", name.c_str());
-
-        Layer::forward_fallback(inputs_arr, outputs_arr, internals_arr);
-    }
-
     void forward(std::vector<Mat*> &inputs, std::vector<Mat> &outputs, std::vector<Mat> &internals)
     {
         CV_TRACE_FUNCTION();
@@ -119,9 +111,8 @@ public:
         CV_Assert(inputs.size() == 1);
 
         Mat &inpBlob = *inputs[0];
-        CV_Assert(inpBlob.dims == 2 || inpBlob.dims == 4);
-        int rows = inpBlob.dims > 2 ? inpBlob.size[2] : 1;
-        int cols = inpBlob.dims > 2 ? inpBlob.size[3] : 1;
+        int rows = inpBlob.size[2];
+        int cols = inpBlob.size[3];
 
         for (size_t ii = 0; ii < outputs.size(); ii++)
         {
