@@ -14,10 +14,10 @@ tracks:
     patches: kinetic
     release_inc: '5'
     release_repo_url: null
-    release_tag: null
+    release_tag: :{version}
     ros_distro: kinetic
-    vcs_type: tar
-    vcs_uri: /home/vrabaud/workspace/ws_opencv3/tmp/opencv.tar.gz
+    vcs_type: git
+    vcs_uri: https://github.com/opencv/opencv.git
     version: 3.3.1
   archlunar:
     actions:
@@ -34,10 +34,10 @@ tracks:
     patches: lunar
     release_inc: '2'
     release_repo_url: null
-    release_tag: null
+    release_tag: :{version}
     ros_distro: lunar
-    vcs_type: tar
-    vcs_uri: /home/vrabaud/workspace/ws_opencv3/tmp/opencv.tar.gz
+    vcs_type: git
+    vcs_uri: https://github.com/opencv/opencv.git
     version: 3.3.1
   indigo:
     actions:
