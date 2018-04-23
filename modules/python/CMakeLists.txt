@@ -2,8 +2,6 @@
 #  CMake file for python support
 # ----------------------------------------------------------------------------
 
-add_subdirectory(bindings)
-
 if(ANDROID OR APPLE_FRAMEWORK OR WINRT)
   set(__disable_python2 ON)
   set(__disable_python3 ON)

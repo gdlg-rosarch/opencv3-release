@@ -1632,7 +1632,7 @@ static gboolean icvOnKeyPress(GtkWidget* widget, GdkEventKey* event, gpointer us
         break;
     case GDK_Return:
     case GDK_Linefeed:
-        code = 13;
+        code = '\n';
         break;
     case GDK_Tab:
         code = '\t';

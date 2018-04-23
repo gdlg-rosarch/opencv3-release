@@ -4513,7 +4513,7 @@ cvOpenFileStorage( const char* query, CvMemStorage* dststorage, int flags, const
 
         //mode = cvGetErrMode();
         //cvSetErrMode( CV_ErrModeSilent );
-        CV_TRY
+        try
         {
             switch (fs->fmt)
             {
@@ -4523,11 +4523,11 @@ cvOpenFileStorage( const char* query, CvMemStorage* dststorage, int flags, const
             default: break;
             }
         }
-        CV_CATCH_ALL
+        catch (...)
         {
             fs->is_opened = true;
             cvReleaseFileStorage( &fs );
-            CV_RETHROW();
+            throw;
         }
         //cvSetErrMode( mode );
 
@@ -5986,11 +5986,11 @@ icvReadSeq( CvFileStorage* fs, CvFileNode* node )
             flags |= CV_SEQ_FLAG_HOLE;
         if( !strstr(flags_str, "untyped") )
         {
-            CV_TRY
+            try
             {
                 flags |= icvDecodeSimpleFormat(dt);
             }
-            CV_CATCH_ALL
+            catch(...)
             {
             }
         }
@@ -7367,18 +7367,8 @@ void read(const FileNode& node, std::vector<KeyPoint>& keypoints)
     if (first_node.isSeq())
     {
         // modern scheme
-#ifdef OPENCV_TRAITS_ENABLE_DEPRECATED
-        FileNodeIterator it = node.begin();
-        size_t total = (size_t)it.remaining;
-        keypoints.resize(total);
-        for (size_t i = 0; i < total; ++i, ++it)
-        {
-            (*it) >> keypoints[i];
-        }
-#else
         FileNodeIterator it = node.begin();
         it >> keypoints;
-#endif
         return;
     }
     keypoints.clear();
@@ -7404,18 +7394,8 @@ void read(const FileNode& node, std::vector<DMatch>& matches)
     if (first_node.isSeq())
     {
         // modern scheme
-#ifdef OPENCV_TRAITS_ENABLE_DEPRECATED
-        FileNodeIterator it = node.begin();
-        size_t total = (size_t)it.remaining;
-        matches.resize(total);
-        for (size_t i = 0; i < total; ++i, ++it)
-        {
-            (*it) >> matches[i];
-        }
-#else
         FileNodeIterator it = node.begin();
         it >> matches;
-#endif
         return;
     }
     matches.clear();

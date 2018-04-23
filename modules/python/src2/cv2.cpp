@@ -9,12 +9,6 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/ndarrayobject.h>
 
-#if PY_MAJOR_VERSION >= 3
-#  define CV_PYTHON_TYPE_HEAD_INIT() PyVarObject_HEAD_INIT(&PyType_Type, 0)
-#else
-#  define CV_PYTHON_TYPE_HEAD_INIT() PyObject_HEAD_INIT(&PyType_Type) 0,
-#endif
-
 #include "pyopencv_generated_include.h"
 #include "opencv2/core/types_c.h"
 
@@ -402,24 +396,6 @@ bool pyopencv_to(PyObject* o, Mat& m, const char* name)
     return pyopencv_to(o, m, ArgInfo(name, 0));
 }
 
-template<typename _Tp, int m, int n>
-bool pyopencv_to(PyObject* o, Matx<_Tp, m, n>& mx, const ArgInfo info)
-{
-    Mat tmp;
-    if (!pyopencv_to(o, tmp, info)) {
-        return false;
-    }
-
-    tmp.copyTo(mx);
-    return true;
-}
-
-template<typename _Tp, int m, int n>
-bool pyopencv_to(PyObject* o, Matx<_Tp, m, n>& mx, const char* name)
-{
-    return pyopencv_to(o, mx, ArgInfo(name, 0));
-}
-
 template <typename T>
 bool pyopencv_to(PyObject *o, Ptr<T>& p, const char *name)
 {
@@ -707,17 +683,18 @@ PyObject* pyopencv_from(const UMat& m) {
     return o;
 }
 
-static bool pyopencv_to(PyObject *o, Scalar& s, const ArgInfo info)
+template<>
+bool pyopencv_to(PyObject *o, Scalar& s, const char *name)
 {
     if(!o || o == Py_None)
         return true;
     if (PySequence_Check(o)) {
-        PyObject *fi = PySequence_Fast(o, info.name);
+        PyObject *fi = PySequence_Fast(o, name);
         if (fi == NULL)
             return false;
         if (4 < PySequence_Fast_GET_SIZE(fi))
         {
-            failmsg("Scalar value for argument '%s' is longer than 4", info.name);
+            failmsg("Scalar value for argument '%s' is longer than 4", name);
             return false;
         }
         for (Py_ssize_t i = 0; i < PySequence_Fast_GET_SIZE(fi); i++) {
@@ -725,7 +702,7 @@ static bool pyopencv_to(PyObject *o, Scalar& s, const ArgInfo info)
             if (PyFloat_Check(item) || PyInt_Check(item)) {
                 s[(int)i] = PyFloat_AsDouble(item);
             } else {
-                failmsg("Scalar value for argument '%s' is not numeric", info.name);
+                failmsg("Scalar value for argument '%s' is not numeric", name);
                 return false;
             }
         }
@@ -734,17 +711,11 @@ static bool pyopencv_to(PyObject *o, Scalar& s, const ArgInfo info)
         if (PyFloat_Check(o) || PyInt_Check(o)) {
             s[0] = PyFloat_AsDouble(o);
         } else {
-            failmsg("Scalar value for argument '%s' is not numeric", info.name);
+            failmsg("Scalar value for argument '%s' is not numeric", name);
             return false;
         }
     }
     return true;
-}
-
-template<>
-bool pyopencv_to(PyObject *o, Scalar& s, const char *name)
-{
-    return pyopencv_to(o, s, ArgInfo(name, 0));
 }
 
 template<>
@@ -1053,139 +1024,13 @@ PyObject* pyopencv_from(const Point3f& p)
     return Py_BuildValue("(ddd)", p.x, p.y, p.z);
 }
 
-static bool pyopencv_to(PyObject* obj, Vec4d& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
-        return true;
-    return PyArg_ParseTuple(obj, "dddd", &v[0], &v[1], &v[2], &v[3]) > 0;
-}
-template<>
-bool pyopencv_to(PyObject* obj, Vec4d& v, const char* name)
-{
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-static bool pyopencv_to(PyObject* obj, Vec4f& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
-        return true;
-    return PyArg_ParseTuple(obj, "ffff", &v[0], &v[1], &v[2], &v[3]) > 0;
-}
-template<>
-bool pyopencv_to(PyObject* obj, Vec4f& v, const char* name)
-{
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-static bool pyopencv_to(PyObject* obj, Vec4i& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
-        return true;
-    return PyArg_ParseTuple(obj, "iiii", &v[0], &v[1], &v[2], &v[3]) > 0;
-}
-template<>
-bool pyopencv_to(PyObject* obj, Vec4i& v, const char* name)
-{
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-static bool pyopencv_to(PyObject* obj, Vec3d& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
-        return true;
-    return PyArg_ParseTuple(obj, "ddd", &v[0], &v[1], &v[2]) > 0;
-}
 template<>
 bool pyopencv_to(PyObject* obj, Vec3d& v, const char* name)
 {
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-static bool pyopencv_to(PyObject* obj, Vec3f& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
+    (void)name;
+    if(!obj)
         return true;
-    return PyArg_ParseTuple(obj, "fff", &v[0], &v[1], &v[2]) > 0;
-}
-template<>
-bool pyopencv_to(PyObject* obj, Vec3f& v, const char* name)
-{
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-static bool pyopencv_to(PyObject* obj, Vec3i& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
-        return true;
-    return PyArg_ParseTuple(obj, "iii", &v[0], &v[1], &v[2]) > 0;
-}
-template<>
-bool pyopencv_to(PyObject* obj, Vec3i& v, const char* name)
-{
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-static bool pyopencv_to(PyObject* obj, Vec2d& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
-        return true;
-    return PyArg_ParseTuple(obj, "dd", &v[0], &v[1]) > 0;
-}
-template<>
-bool pyopencv_to(PyObject* obj, Vec2d& v, const char* name)
-{
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-static bool pyopencv_to(PyObject* obj, Vec2f& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
-        return true;
-    return PyArg_ParseTuple(obj, "ff", &v[0], &v[1]) > 0;
-}
-template<>
-bool pyopencv_to(PyObject* obj, Vec2f& v, const char* name)
-{
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-static bool pyopencv_to(PyObject* obj, Vec2i& v, ArgInfo info)
-{
-    (void)info;
-    if (!obj)
-        return true;
-    return PyArg_ParseTuple(obj, "ii", &v[0], &v[1]) > 0;
-}
-template<>
-bool pyopencv_to(PyObject* obj, Vec2i& v, const char* name)
-{
-    return pyopencv_to(obj, v, ArgInfo(name, 0));
-}
-
-template<>
-PyObject* pyopencv_from(const Vec4d& v)
-{
-    return Py_BuildValue("(dddd)", v[0], v[1], v[2], v[3]);
-}
-
-template<>
-PyObject* pyopencv_from(const Vec4f& v)
-{
-    return Py_BuildValue("(ffff)", v[0], v[1], v[2], v[3]);
-}
-
-template<>
-PyObject* pyopencv_from(const Vec4i& v)
-{
-    return Py_BuildValue("(iiii)", v[0], v[1], v[2], v[3]);
+    return PyArg_ParseTuple(obj, "ddd", &v[0], &v[1], &v[2]) > 0;
 }
 
 template<>
@@ -1195,33 +1040,9 @@ PyObject* pyopencv_from(const Vec3d& v)
 }
 
 template<>
-PyObject* pyopencv_from(const Vec3f& v)
-{
-    return Py_BuildValue("(fff)", v[0], v[1], v[2]);
-}
-
-template<>
-PyObject* pyopencv_from(const Vec3i& v)
-{
-    return Py_BuildValue("(iii)", v[0], v[1], v[2]);
-}
-
-template<>
 PyObject* pyopencv_from(const Vec2d& v)
 {
     return Py_BuildValue("(dd)", v[0], v[1]);
-}
-
-template<>
-PyObject* pyopencv_from(const Vec2f& v)
-{
-    return Py_BuildValue("(ff)", v[0], v[1]);
-}
-
-template<>
-PyObject* pyopencv_from(const Vec2i& v)
-{
-    return Py_BuildValue("(ii)", v[0], v[1]);
 }
 
 template<>

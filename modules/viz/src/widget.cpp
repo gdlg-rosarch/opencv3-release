@@ -227,7 +227,7 @@ double cv::viz::Widget::getRenderingProperty(int property) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-/// widget accessor implementation
+/// widget accessor implementaion
 
 vtkSmartPointer<vtkProp> cv::viz::WidgetAccessor::getProp(const Widget& widget)
 {

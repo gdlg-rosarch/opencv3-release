@@ -210,15 +210,11 @@ public:
 
     virtual void write( FileStorage&) const;
 
-    // see corresponding cv::Algorithm method
-    CV_WRAP virtual void read( const FileNode&);
+    virtual void read( const FileNode&);
 
     //! Return true if detector object is empty
     CV_WRAP virtual bool empty() const;
     CV_WRAP virtual String getDefaultName() const;
-
-    // see corresponding cv::Algorithm method
-    CV_WRAP inline void write(const Ptr<FileStorage>& fs, const String& name = String()) const { Algorithm::write(fs, name); }
 };
 
 /** Feature detectors in OpenCV have wrappers with a common interface that enables you to easily switch
@@ -786,7 +782,7 @@ struct CV_EXPORTS SL2
  * Euclidean distance functor
  */
 template<class T>
-struct L2
+struct CV_EXPORTS L2
 {
     enum { normType = NORM_L2 };
     typedef T ValueType;
@@ -802,7 +798,7 @@ struct L2
  * Manhattan distance (city block distance) functor
  */
 template<class T>
-struct L1
+struct CV_EXPORTS L1
 {
     enum { normType = NORM_L1 };
     typedef T ValueType;
@@ -989,8 +985,7 @@ public:
         read(fs.root());
     }
     // Reads matcher object from a file node
-    // see corresponding cv::Algorithm method
-    CV_WRAP virtual void read( const FileNode& );
+    virtual void read( const FileNode& );
     // Writes matcher object to a file storage
     virtual void write( FileStorage& ) const;
 
@@ -1016,10 +1011,6 @@ public:
     CV_WRAP static Ptr<DescriptorMatcher> create( const String& descriptorMatcherType );
 
     CV_WRAP static Ptr<DescriptorMatcher> create( int matcherType );
-
-
-    // see corresponding cv::Algorithm method
-    CV_WRAP inline void write(const Ptr<FileStorage>& fs, const String& name = String()) const { Algorithm::write(fs, name); }
 
 protected:
     /**

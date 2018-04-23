@@ -88,7 +88,7 @@ namespace perf
             SANITY_CHECK(cpu_##mat, ## __VA_ARGS__); \
         } while(0)
 
-    cv::Mat readImage(const std::string& fileName, int flags = cv::IMREAD_COLOR);
+    CV_EXPORTS cv::Mat readImage(const std::string& fileName, int flags = cv::IMREAD_COLOR);
 
     struct CvtColorInfo
     {
@@ -99,11 +99,11 @@ namespace perf
         CvtColorInfo() {}
         explicit CvtColorInfo(int scn_, int dcn_, int code_) : scn(scn_), dcn(dcn_), code(code_) {}
     };
-    void PrintTo(const CvtColorInfo& info, std::ostream* os);
+    CV_EXPORTS void PrintTo(const CvtColorInfo& info, std::ostream* os);
 
-    void printCudaInfo();
+    CV_EXPORTS void printCudaInfo();
 
-    void sortKeyPoints(std::vector<cv::KeyPoint>& keypoints, cv::InputOutputArray _descriptors = cv::noArray());
+    CV_EXPORTS void sortKeyPoints(std::vector<cv::KeyPoint>& keypoints, cv::InputOutputArray _descriptors = cv::noArray());
 
 #ifdef HAVE_CUDA
     #define CV_PERF_TEST_CUDA_MAIN(modulename) \

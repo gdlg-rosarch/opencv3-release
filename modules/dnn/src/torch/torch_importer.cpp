@@ -617,8 +617,7 @@ struct TorchImporter : public ::cv::dnn::Importer
                 curModule->modules.push_back(cv::Ptr<Module>(new Module(nnName, "Sigmoid")));
                 readObject();
             }
-            else if (nnName == "SpatialBatchNormalization" || nnName == "InstanceNormalization" ||
-                     nnName == "BatchNormalization")
+            else if (nnName == "SpatialBatchNormalization")
             {
                 newModule->apiType = "BatchNorm";
                 readTorchTable(scalarParams, tensorParams);
@@ -627,30 +626,18 @@ struct TorchImporter : public ::cv::dnn::Importer
                 float eps = float(scalarParams.get<double>("eps"));
                 layerParams.set("eps", eps);
 
-                if (tensorParams.count("running_mean"))
-                {
-                    layerParams.blobs.push_back(tensorParams["running_mean"].second);
-                }
-                else
-                {
-                    CV_Assert(scalarParams.has("nOutput"));
-                    layerParams.blobs.push_back(Mat::zeros(1, scalarParams.get<int>("nOutput"), CV_32F));
-                }
-
+                CV_Assert((tensorParams.count("running_var") || tensorParams.count("running_std")) &&
+                          tensorParams.count("running_mean"));
+                layerParams.blobs.push_back(tensorParams["running_mean"].second);
                 if (tensorParams.count("running_var"))
                 {
                     layerParams.blobs.push_back(tensorParams["running_var"].second);
                 }
-                else if (tensorParams.count("running_std"))
+                else
                 {
                     layerParams.blobs.push_back(tensorParams["running_std"].second);
                     pow(layerParams.blobs.back(), -2, layerParams.blobs.back());
                     subtract(layerParams.blobs.back(), eps, layerParams.blobs.back());
-                }
-                else
-                {
-                    CV_Assert(scalarParams.has("nOutput"));
-                    layerParams.blobs.push_back(Mat::ones(1, scalarParams.get<int>("nOutput"), CV_32F));
                 }
 
                 if (tensorParams.count("weight"))
@@ -663,16 +650,6 @@ struct TorchImporter : public ::cv::dnn::Importer
                 {
                     layerParams.set("has_bias", true);
                     layerParams.blobs.push_back(tensorParams["bias"].second);
-                }
-
-                if (nnName == "InstanceNormalization")
-                {
-                    cv::Ptr<Module> mvnModule(new Module(nnName));
-                    mvnModule->apiType = "MVN";
-                    curModule->modules.push_back(mvnModule);
-
-                    layerParams.blobs[0].setTo(0);  // batch norm's mean
-                    layerParams.blobs[1].setTo(1);  // batch norm's std
                 }
 
                 curModule->modules.push_back(newModule);
@@ -701,29 +678,20 @@ struct TorchImporter : public ::cv::dnn::Importer
 
                 curModule->modules.push_back(newModule);
             }
-            else if (nnName == "SpatialDropout" || nnName == "Dropout")
+            else if (nnName == "SpatialDropout")
             {
                 readTorchTable(scalarParams, tensorParams);
                 CV_Assert(scalarParams.has("p"));
 
-                if (scalarParams.has("v2") && scalarParams.get<bool>("v2"))
-                {
-                    newModule->apiType = "Identity";
-                }
-                else
-                {
-                    float scale = 1 -  scalarParams.get<double>("p");
+                float scale = 1 -  scalarParams.get<double>("p");
 
-                    CV_Assert(scale > 0);
+                CV_Assert(scale > 0);
 
-                    newModule->apiType = "Power";
-                    layerParams.set("scale", scale);
-                }
+                newModule->apiType = "Power";
+                layerParams.set("scale", scale);
                 curModule->modules.push_back(newModule);
             }
-            // TotalVariation layer is from fast-neural-style project: https://github.com/jcjohnson/fast-neural-style
-            // It's a loss function that has an Identity forward.
-            else if (nnName == "Identity" || nnName == "TotalVariation")
+            else if (nnName == "Identity")
             {
                 readTorchTable(scalarParams, tensorParams);
                 newModule->apiType = "Identity";
@@ -898,7 +866,7 @@ struct TorchImporter : public ::cv::dnn::Importer
                 layerParams.set("scale", scalarParams.get<float>("constant_scalar"));
                 curModule->modules.push_back(newModule);
             }
-            else if (nnName == "SpatialZeroPadding" || nnName == "SpatialReflectionPadding")
+            else if (nnName == "SpatialZeroPadding")
             {
                 readTorchTable(scalarParams, tensorParams);
                 CV_Assert(scalarParams.has("pad_l"), scalarParams.has("pad_r"),
@@ -921,26 +889,6 @@ struct TorchImporter : public ::cv::dnn::Importer
                 paddings[5] = padRight;
                 layerParams.set("paddings", DictValue::arrayInt<int*>(&paddings[0], paddings.size()));
                 layerParams.set("input_dims", 3);
-
-                if (nnName == "SpatialReflectionPadding")
-                    layerParams.set("type", "reflect");
-
-                curModule->modules.push_back(newModule);
-            }
-            else if (nnName == "ShaveImage")
-            {
-                // ShaveImage layer is from fast-neural-style project: https://github.com/jcjohnson/fast-neural-style
-                // It may be mapped to Slice layer.
-                readTorchTable(scalarParams, tensorParams);
-                CV_Assert(scalarParams.has("size"));
-                int size = scalarParams.get<int>("size");
-
-                int begins[] = {0, 0, size, size};
-                int ends[] = {-1, -1, -size - 1, -size - 1};
-
-                newModule->apiType = "Slice";
-                layerParams.set("begin", DictValue::arrayInt<int*>(&begins[0], 4));
-                layerParams.set("end", DictValue::arrayInt<int*>(&ends[0], 4));
                 curModule->modules.push_back(newModule);
             }
             else
@@ -1206,16 +1154,6 @@ Mat readTorchBlob(const String &filename, bool isBinary)
     return importer->tensors.begin()->second;
 }
 
-Net readNetFromTorch(const String &model, bool isBinary)
-{
-    CV_TRACE_FUNCTION();
-
-    TorchImporter importer(model, isBinary);
-    Net net;
-    importer.populateNet(net);
-    return net;
-}
-
 #else
 
 Ptr<Importer> createTorchImporter(const String&, bool)
@@ -1230,13 +1168,17 @@ Mat readTorchBlob(const String&, bool)
     return Mat();
 }
 
+#endif //defined(ENABLE_TORCH_IMPORTER) && ENABLE_TORCH_IMPORTER
+
 Net readNetFromTorch(const String &model, bool isBinary)
 {
-    CV_Error(Error::StsNotImplemented, "Torch importer is disabled in current build");
-    return Net();
-}
+    CV_TRACE_FUNCTION();
 
-#endif //defined(ENABLE_TORCH_IMPORTER) && ENABLE_TORCH_IMPORTER
+    TorchImporter importer(model, isBinary);
+    Net net;
+    importer.populateNet(net);
+    return net;
+}
 
 CV__DNN_EXPERIMENTAL_NS_END
 }} // namespace

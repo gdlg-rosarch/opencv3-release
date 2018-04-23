@@ -159,9 +159,6 @@ void dumpOpenCLDevice()
         DUMP_MESSAGE_STDOUT("    Driver version = " << device.driverVersion());
         DUMP_PROPERTY_XML("cv_ocl_current_driverVersion", device.driverVersion());
 
-        DUMP_MESSAGE_STDOUT("    Address bits = " << device.addressBits());
-        DUMP_PROPERTY_XML("cv_ocl_current_addressBits", device.addressBits());
-
         DUMP_MESSAGE_STDOUT("    Compute units = "<< device.maxComputeUnits());
         DUMP_PROPERTY_XML("cv_ocl_current_maxComputeUnits", device.maxComputeUnits());
 

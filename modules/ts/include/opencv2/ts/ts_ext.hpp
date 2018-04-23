@@ -10,7 +10,6 @@
 
 namespace cvtest {
 void checkIppStatus();
-extern bool skipUnstableTests;
 }
 
 #define CV__TEST_INIT \

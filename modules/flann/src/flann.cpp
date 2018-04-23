@@ -53,4 +53,5 @@ namespace cvflann
         flann_distance_type_ = distance_type;
     }
 
+    void dummyfunc() {}
 }

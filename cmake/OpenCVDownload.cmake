@@ -156,12 +156,10 @@ function(ocv_download)
          TIMEOUT 600
          STATUS status
          LOG __log)
-    if(NOT OPENCV_SKIP_FILE_DOWNLOAD_DUMP)  # workaround problem with old CMake versions: "Invalid escape sequence"
-      string(LENGTH "${__log}" __log_length)
-      if(__log_length LESS 65536)
-        string(REPLACE "\n" "\n# " __log "${__log}")
-        ocv_download_log("# ${__log}\n")
-      endif()
+    string(LENGTH "${__log}" __log_length)
+    if(__log_length LESS 65536)
+      string(REPLACE "\n" "\n# " __log "${__log}")
+      ocv_download_log("# ${__log}\n")
     endif()
     if(NOT status EQUAL 0)
       set(msg_level FATAL_ERROR)

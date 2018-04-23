@@ -53,34 +53,34 @@ namespace cvtest
     //////////////////////////////////////////////////////////////////////
     // random generators
 
-    int randomInt(int minVal, int maxVal);
-    double randomDouble(double minVal, double maxVal);
-    cv::Size randomSize(int minVal, int maxVal);
-    cv::Scalar randomScalar(double minVal, double maxVal);
-    cv::Mat randomMat(cv::Size size, int type, double minVal = 0.0, double maxVal = 255.0);
+    CV_EXPORTS int randomInt(int minVal, int maxVal);
+    CV_EXPORTS double randomDouble(double minVal, double maxVal);
+    CV_EXPORTS cv::Size randomSize(int minVal, int maxVal);
+    CV_EXPORTS cv::Scalar randomScalar(double minVal, double maxVal);
+    CV_EXPORTS cv::Mat randomMat(cv::Size size, int type, double minVal = 0.0, double maxVal = 255.0);
 
     //////////////////////////////////////////////////////////////////////
     // GpuMat create
 
-    cv::cuda::GpuMat createMat(cv::Size size, int type, bool useRoi = false);
-    cv::cuda::GpuMat loadMat(const cv::Mat& m, bool useRoi = false);
+    CV_EXPORTS cv::cuda::GpuMat createMat(cv::Size size, int type, bool useRoi = false);
+    CV_EXPORTS cv::cuda::GpuMat loadMat(const cv::Mat& m, bool useRoi = false);
 
     //////////////////////////////////////////////////////////////////////
     // Image load
 
     //! read image from testdata folder
-    cv::Mat readImage(const std::string& fileName, int flags = cv::IMREAD_COLOR);
+    CV_EXPORTS cv::Mat readImage(const std::string& fileName, int flags = cv::IMREAD_COLOR);
 
     //! read image from testdata folder and convert it to specified type
-    cv::Mat readImageType(const std::string& fname, int type);
+    CV_EXPORTS cv::Mat readImageType(const std::string& fname, int type);
 
     //////////////////////////////////////////////////////////////////////
     // Gpu devices
 
     //! return true if device supports specified feature and gpu module was built with support the feature.
-    bool supportFeature(const cv::cuda::DeviceInfo& info, cv::cuda::FeatureSet feature);
+    CV_EXPORTS bool supportFeature(const cv::cuda::DeviceInfo& info, cv::cuda::FeatureSet feature);
 
-    class DeviceManager
+    class CV_EXPORTS DeviceManager
     {
     public:
         static DeviceManager& instance();
@@ -99,11 +99,11 @@ namespace cvtest
     //////////////////////////////////////////////////////////////////////
     // Additional assertion
 
-    void minMaxLocGold(const cv::Mat& src, double* minVal_, double* maxVal_ = 0, cv::Point* minLoc_ = 0, cv::Point* maxLoc_ = 0, const cv::Mat& mask = cv::Mat());
+    CV_EXPORTS void minMaxLocGold(const cv::Mat& src, double* minVal_, double* maxVal_ = 0, cv::Point* minLoc_ = 0, cv::Point* maxLoc_ = 0, const cv::Mat& mask = cv::Mat());
 
-    cv::Mat getMat(cv::InputArray arr);
+    CV_EXPORTS cv::Mat getMat(cv::InputArray arr);
 
-    testing::AssertionResult assertMatNear(const char* expr1, const char* expr2, const char* eps_expr, cv::InputArray m1, cv::InputArray m2, double eps);
+    CV_EXPORTS testing::AssertionResult assertMatNear(const char* expr1, const char* expr2, const char* eps_expr, cv::InputArray m1, cv::InputArray m2, double eps);
 
     #undef EXPECT_MAT_NEAR
     #define EXPECT_MAT_NEAR(m1, m2, eps) EXPECT_PRED_FORMAT3(cvtest::assertMatNear, m1, m2, eps)
@@ -148,7 +148,7 @@ namespace cvtest
             ASSERT_NEAR(p1.z, p2.z, eps); \
         }
 
-    double checkSimilarity(cv::InputArray m1, cv::InputArray m2);
+    CV_EXPORTS double checkSimilarity(cv::InputArray m1, cv::InputArray m2);
 
     #undef EXPECT_MAT_SIMILAR
     #define EXPECT_MAT_SIMILAR(mat1, mat2, eps) \
@@ -248,10 +248,10 @@ namespace cvtest
     using perf::MatType;
 
     //! return vector with types from specified range.
-    std::vector<MatType> types(int depth_start, int depth_end, int cn_start, int cn_end);
+    CV_EXPORTS std::vector<MatType> types(int depth_start, int depth_end, int cn_start, int cn_end);
 
     //! return vector with all types (depth: CV_8U-CV_64F, channels: 1-4).
-    const std::vector<MatType>& all_types();
+    CV_EXPORTS const std::vector<MatType>& all_types();
 
     #define ALL_TYPES testing::ValuesIn(all_types())
     #define TYPES(depth_start, depth_end, cn_start, cn_end) testing::ValuesIn(types(depth_start, depth_end, cn_start, cn_end))
@@ -269,7 +269,7 @@ namespace cvtest
         bool val_;
     };
 
-    void PrintTo(const UseRoi& useRoi, std::ostream* os);
+    CV_EXPORTS void PrintTo(const UseRoi& useRoi, std::ostream* os);
 
     #define WHOLE_SUBMAT testing::Values(UseRoi(false), UseRoi(true))
 
@@ -286,7 +286,7 @@ namespace cvtest
         bool val_;
     };
 
-    void PrintTo(const Inverse& useRoi, std::ostream* os);
+    CV_EXPORTS void PrintTo(const Inverse& useRoi, std::ostream* os);
 
     #define DIRECT_INVERSE testing::Values(Inverse(false), Inverse(true))
 
@@ -325,26 +325,26 @@ namespace cvtest
     //////////////////////////////////////////////////////////////////////
     // Features2D
 
-    testing::AssertionResult assertKeyPointsEquals(const char* gold_expr, const char* actual_expr, std::vector<cv::KeyPoint>& gold, std::vector<cv::KeyPoint>& actual);
+    CV_EXPORTS testing::AssertionResult assertKeyPointsEquals(const char* gold_expr, const char* actual_expr, std::vector<cv::KeyPoint>& gold, std::vector<cv::KeyPoint>& actual);
 
     #define ASSERT_KEYPOINTS_EQ(gold, actual) EXPECT_PRED_FORMAT2(assertKeyPointsEquals, gold, actual)
 
-    int getMatchedPointsCount(std::vector<cv::KeyPoint>& gold, std::vector<cv::KeyPoint>& actual);
-    int getMatchedPointsCount(const std::vector<cv::KeyPoint>& keypoints1, const std::vector<cv::KeyPoint>& keypoints2, const std::vector<cv::DMatch>& matches);
+    CV_EXPORTS int getMatchedPointsCount(std::vector<cv::KeyPoint>& gold, std::vector<cv::KeyPoint>& actual);
+    CV_EXPORTS int getMatchedPointsCount(const std::vector<cv::KeyPoint>& keypoints1, const std::vector<cv::KeyPoint>& keypoints2, const std::vector<cv::DMatch>& matches);
 
     //////////////////////////////////////////////////////////////////////
     // Other
 
-    void dumpImage(const std::string& fileName, const cv::Mat& image);
-    void showDiff(cv::InputArray gold, cv::InputArray actual, double eps);
+    CV_EXPORTS void dumpImage(const std::string& fileName, const cv::Mat& image);
+    CV_EXPORTS void showDiff(cv::InputArray gold, cv::InputArray actual, double eps);
 
-    void parseCudaDeviceOptions(int argc, char **argv);
-    void printCudaInfo();
+    CV_EXPORTS void parseCudaDeviceOptions(int argc, char **argv);
+    CV_EXPORTS void printCudaInfo();
 }
 
 namespace cv { namespace cuda
 {
-    void PrintTo(const DeviceInfo& info, std::ostream* os);
+    CV_EXPORTS void PrintTo(const DeviceInfo& info, std::ostream* os);
 }}
 
 #ifdef HAVE_CUDA

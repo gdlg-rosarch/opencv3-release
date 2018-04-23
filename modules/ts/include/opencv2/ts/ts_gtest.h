@@ -2295,7 +2295,7 @@ using ::std::tuple_size;
 #endif // _MSC_VER
 
 #ifndef GTEST_API_
-# define GTEST_API_
+# define GTEST_API_ CV_EXPORTS
 #endif
 
 #ifdef __GNUC__
