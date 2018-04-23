@@ -17,16 +17,9 @@ CV__DNN_EXPERIMENTAL_NS_BEGIN
 
 #ifdef HAVE_PROTOBUF
 
-void shrinkCaffeModel(const String& src, const String& dst, const std::vector<String>& layersTypes)
+void shrinkCaffeModel(const String& src, const String& dst)
 {
     CV_TRACE_FUNCTION();
-
-    std::vector<String> types(layersTypes);
-    if (types.empty())
-    {
-        types.push_back("Convolution");
-        types.push_back("InnerProduct");
-    }
 
     caffe::NetParameter net;
     ReadNetParamsFromBinaryFileOrDie(src.c_str(), &net);
@@ -34,10 +27,6 @@ void shrinkCaffeModel(const String& src, const String& dst, const std::vector<St
     for (int i = 0; i < net.layer_size(); ++i)
     {
         caffe::LayerParameter* lp = net.mutable_layer(i);
-        if (std::find(types.begin(), types.end(), lp->type()) == types.end())
-        {
-            continue;
-        }
         for (int j = 0; j < lp->blobs_size(); ++j)
         {
             caffe::BlobProto* blob = lp->mutable_blobs(j);
@@ -65,7 +54,7 @@ void shrinkCaffeModel(const String& src, const String& dst, const std::vector<St
 
 #else
 
-void shrinkCaffeModel(const String& src, const String& dst, const std::vector<String>& types)
+void shrinkCaffeModel(const String& src, const String& dst)
 {
     CV_Error(cv::Error::StsNotImplemented, "libprotobuf required to import data from Caffe models");
 }

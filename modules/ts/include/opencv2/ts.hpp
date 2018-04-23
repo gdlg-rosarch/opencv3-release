@@ -86,11 +86,11 @@ public:
     SkipTestException(const cv::String& message) : dummy(0) { this->msg = message; }
 };
 
-class TS;
+class CV_EXPORTS TS;
 
-int64 readSeed(const char* str);
+CV_EXPORTS int64 readSeed(const char* str);
 
-void randUni( RNG& rng, Mat& a, const Scalar& param1, const Scalar& param2 );
+CV_EXPORTS void randUni( RNG& rng, Mat& a, const Scalar& param1, const Scalar& param2 );
 
 inline unsigned randInt( RNG& rng )
 {
@@ -103,10 +103,10 @@ inline  double randReal( RNG& rng )
 }
 
 
-const char* getTypeName( int type );
-int typeByName( const char* type_name );
+CV_EXPORTS const char* getTypeName( int type );
+CV_EXPORTS int typeByName( const char* type_name );
 
-string vec2str(const string& sep, const int* v, size_t nelems);
+CV_EXPORTS string vec2str(const string& sep, const int* v, size_t nelems);
 
 inline int clipInt( int val, int min_val, int max_val )
 {
@@ -117,99 +117,99 @@ inline int clipInt( int val, int min_val, int max_val )
     return val;
 }
 
-double getMinVal(int depth);
-double getMaxVal(int depth);
+CV_EXPORTS double getMinVal(int depth);
+CV_EXPORTS double getMaxVal(int depth);
 
-Size randomSize(RNG& rng, double maxSizeLog);
-void randomSize(RNG& rng, int minDims, int maxDims, double maxSizeLog, vector<int>& sz);
-int randomType(RNG& rng, int typeMask, int minChannels, int maxChannels);
-Mat randomMat(RNG& rng, Size size, int type, double minVal, double maxVal, bool useRoi);
-Mat randomMat(RNG& rng, const vector<int>& size, int type, double minVal, double maxVal, bool useRoi);
-void add(const Mat& a, double alpha, const Mat& b, double beta,
+CV_EXPORTS Size randomSize(RNG& rng, double maxSizeLog);
+CV_EXPORTS void randomSize(RNG& rng, int minDims, int maxDims, double maxSizeLog, vector<int>& sz);
+CV_EXPORTS int randomType(RNG& rng, int typeMask, int minChannels, int maxChannels);
+CV_EXPORTS Mat randomMat(RNG& rng, Size size, int type, double minVal, double maxVal, bool useRoi);
+CV_EXPORTS Mat randomMat(RNG& rng, const vector<int>& size, int type, double minVal, double maxVal, bool useRoi);
+CV_EXPORTS void add(const Mat& a, double alpha, const Mat& b, double beta,
                       Scalar gamma, Mat& c, int ctype, bool calcAbs=false);
-void multiply(const Mat& a, const Mat& b, Mat& c, double alpha=1);
-void divide(const Mat& a, const Mat& b, Mat& c, double alpha=1);
+CV_EXPORTS void multiply(const Mat& a, const Mat& b, Mat& c, double alpha=1);
+CV_EXPORTS void divide(const Mat& a, const Mat& b, Mat& c, double alpha=1);
 
-void convert(const Mat& src, cv::OutputArray dst, int dtype, double alpha=1, double beta=0);
-void copy(const Mat& src, Mat& dst, const Mat& mask=Mat(), bool invertMask=false);
-void set(Mat& dst, const Scalar& gamma, const Mat& mask=Mat());
+CV_EXPORTS void convert(const Mat& src, cv::OutputArray dst, int dtype, double alpha=1, double beta=0);
+CV_EXPORTS void copy(const Mat& src, Mat& dst, const Mat& mask=Mat(), bool invertMask=false);
+CV_EXPORTS void set(Mat& dst, const Scalar& gamma, const Mat& mask=Mat());
 
 // working with multi-channel arrays
-void extract( const Mat& a, Mat& plane, int coi );
-void insert( const Mat& plane, Mat& a, int coi );
+CV_EXPORTS void extract( const Mat& a, Mat& plane, int coi );
+CV_EXPORTS void insert( const Mat& plane, Mat& a, int coi );
 
 // checks that the array does not have NaNs and/or Infs and all the elements are
 // within [min_val,max_val). idx is the index of the first "bad" element.
-int check( const Mat& data, double min_val, double max_val, vector<int>* idx );
+CV_EXPORTS int check( const Mat& data, double min_val, double max_val, vector<int>* idx );
 
 // modifies values that are close to zero
-void  patchZeros( Mat& mat, double level );
+CV_EXPORTS void  patchZeros( Mat& mat, double level );
 
-void transpose(const Mat& src, Mat& dst);
-void erode(const Mat& src, Mat& dst, const Mat& _kernel, Point anchor=Point(-1,-1),
+CV_EXPORTS void transpose(const Mat& src, Mat& dst);
+CV_EXPORTS void erode(const Mat& src, Mat& dst, const Mat& _kernel, Point anchor=Point(-1,-1),
                       int borderType=0, const Scalar& borderValue=Scalar());
-void dilate(const Mat& src, Mat& dst, const Mat& _kernel, Point anchor=Point(-1,-1),
+CV_EXPORTS void dilate(const Mat& src, Mat& dst, const Mat& _kernel, Point anchor=Point(-1,-1),
                        int borderType=0, const Scalar& borderValue=Scalar());
-void filter2D(const Mat& src, Mat& dst, int ddepth, const Mat& kernel,
+CV_EXPORTS void filter2D(const Mat& src, Mat& dst, int ddepth, const Mat& kernel,
                          Point anchor, double delta, int borderType,
                          const Scalar& borderValue=Scalar());
-void copyMakeBorder(const Mat& src, Mat& dst, int top, int bottom, int left, int right,
+CV_EXPORTS void copyMakeBorder(const Mat& src, Mat& dst, int top, int bottom, int left, int right,
                                int borderType, const Scalar& borderValue=Scalar());
-Mat calcSobelKernel2D( int dx, int dy, int apertureSize, int origin=0 );
-Mat calcLaplaceKernel2D( int aperture_size );
+CV_EXPORTS Mat calcSobelKernel2D( int dx, int dy, int apertureSize, int origin=0 );
+CV_EXPORTS Mat calcLaplaceKernel2D( int aperture_size );
 
-void initUndistortMap( const Mat& a, const Mat& k, Size sz, Mat& mapx, Mat& mapy );
+CV_EXPORTS void initUndistortMap( const Mat& a, const Mat& k, Size sz, Mat& mapx, Mat& mapy );
 
-void minMaxLoc(const Mat& src, double* minval, double* maxval,
+CV_EXPORTS void minMaxLoc(const Mat& src, double* minval, double* maxval,
                           vector<int>* minloc, vector<int>* maxloc, const Mat& mask=Mat());
-double norm(InputArray src, int normType, InputArray mask=noArray());
-double norm(InputArray src1, InputArray src2, int normType, InputArray mask=noArray());
-Scalar mean(const Mat& src, const Mat& mask=Mat());
-double PSNR(InputArray src1, InputArray src2);
+CV_EXPORTS double norm(InputArray src, int normType, InputArray mask=noArray());
+CV_EXPORTS double norm(InputArray src1, InputArray src2, int normType, InputArray mask=noArray());
+CV_EXPORTS Scalar mean(const Mat& src, const Mat& mask=Mat());
+CV_EXPORTS double PSNR(InputArray src1, InputArray src2);
 
-bool cmpUlps(const Mat& data, const Mat& refdata, int expMaxDiff, double* realMaxDiff, vector<int>* idx);
+CV_EXPORTS bool cmpUlps(const Mat& data, const Mat& refdata, int expMaxDiff, double* realMaxDiff, vector<int>* idx);
 
 // compares two arrays. max_diff is the maximum actual difference,
 // success_err_level is maximum allowed difference, idx is the index of the first
 // element for which difference is >success_err_level
 // (or index of element with the maximum difference)
-int cmpEps( const Mat& data, const Mat& refdata, double* max_diff,
+CV_EXPORTS int cmpEps( const Mat& data, const Mat& refdata, double* max_diff,
                        double success_err_level, vector<int>* idx,
                        bool element_wise_relative_error );
 
 // a wrapper for the previous function. in case of error prints the message to log file.
-int cmpEps2( TS* ts, const Mat& data, const Mat& refdata, double success_err_level,
+CV_EXPORTS int cmpEps2( TS* ts, const Mat& data, const Mat& refdata, double success_err_level,
                         bool element_wise_relative_error, const char* desc );
 
-int cmpEps2_64f( TS* ts, const double* val, const double* refval, int len,
+CV_EXPORTS int cmpEps2_64f( TS* ts, const double* val, const double* refval, int len,
                         double eps, const char* param_name );
 
-void logicOp(const Mat& src1, const Mat& src2, Mat& dst, char c);
-void logicOp(const Mat& src, const Scalar& s, Mat& dst, char c);
-void min(const Mat& src1, const Mat& src2, Mat& dst);
-void min(const Mat& src, double s, Mat& dst);
-void max(const Mat& src1, const Mat& src2, Mat& dst);
-void max(const Mat& src, double s, Mat& dst);
+CV_EXPORTS void logicOp(const Mat& src1, const Mat& src2, Mat& dst, char c);
+CV_EXPORTS void logicOp(const Mat& src, const Scalar& s, Mat& dst, char c);
+CV_EXPORTS void min(const Mat& src1, const Mat& src2, Mat& dst);
+CV_EXPORTS void min(const Mat& src, double s, Mat& dst);
+CV_EXPORTS void max(const Mat& src1, const Mat& src2, Mat& dst);
+CV_EXPORTS void max(const Mat& src, double s, Mat& dst);
 
-void compare(const Mat& src1, const Mat& src2, Mat& dst, int cmpop);
-void compare(const Mat& src, double s, Mat& dst, int cmpop);
-void gemm(const Mat& src1, const Mat& src2, double alpha,
+CV_EXPORTS void compare(const Mat& src1, const Mat& src2, Mat& dst, int cmpop);
+CV_EXPORTS void compare(const Mat& src, double s, Mat& dst, int cmpop);
+CV_EXPORTS void gemm(const Mat& src1, const Mat& src2, double alpha,
                      const Mat& src3, double beta, Mat& dst, int flags);
-void transform( const Mat& src, Mat& dst, const Mat& transmat, const Mat& shift );
-double crossCorr(const Mat& src1, const Mat& src2);
-void threshold( const Mat& src, Mat& dst, double thresh, double maxval, int thresh_type );
-void minMaxIdx( InputArray _img, double* minVal, double* maxVal,
+CV_EXPORTS void transform( const Mat& src, Mat& dst, const Mat& transmat, const Mat& shift );
+CV_EXPORTS double crossCorr(const Mat& src1, const Mat& src2);
+CV_EXPORTS void threshold( const Mat& src, Mat& dst, double thresh, double maxval, int thresh_type );
+CV_EXPORTS void minMaxIdx( InputArray _img, double* minVal, double* maxVal,
                     Point* minLoc, Point* maxLoc, InputArray _mask );
 
-struct MatInfo
+struct CV_EXPORTS MatInfo
 {
     MatInfo(const Mat& _m) : m(&_m) {}
     const Mat* m;
 };
 
-std::ostream& operator << (std::ostream& out, const MatInfo& m);
+CV_EXPORTS std::ostream& operator << (std::ostream& out, const MatInfo& m);
 
-struct MatComparator
+struct CV_EXPORTS MatComparator
 {
 public:
     MatComparator(double maxdiff, int context);
@@ -228,7 +228,7 @@ public:
 class BaseTest;
 class TS;
 
-class BaseTest
+class CV_EXPORTS BaseTest
 {
 public:
     // constructor(s) and destructor
@@ -312,7 +312,7 @@ struct TestInfo
 \*****************************************************************************************/
 
 // common parameters:
-struct TSParams
+struct CV_EXPORTS TSParams
 {
     TSParams();
 
@@ -327,7 +327,7 @@ struct TSParams
 };
 
 
-class TS
+class CV_EXPORTS TS
 {
 public:
     // constructor(s) and destructor
@@ -473,7 +473,7 @@ protected:
 *            Subclass of BaseTest for testing functions that process dense arrays           *
 \*****************************************************************************************/
 
-class ArrayTest : public BaseTest
+class CV_EXPORTS ArrayTest : public BaseTest
 {
 public:
     // constructor(s) and destructor
@@ -510,7 +510,7 @@ protected:
 };
 
 
-class BadArgTest : public BaseTest
+class CV_EXPORTS BadArgTest : public BaseTest
 {
 public:
     // constructor(s) and destructor
@@ -564,7 +564,7 @@ protected:
 
 extern uint64 param_seed;
 
-struct DefaultRngAuto
+struct CV_EXPORTS DefaultRngAuto
 {
     const uint64 old_state;
 
@@ -576,16 +576,16 @@ struct DefaultRngAuto
 
 
 // test images generation functions
-void fillGradient(Mat& img, int delta = 5);
-void smoothBorder(Mat& img, const Scalar& color, int delta = 3);
+CV_EXPORTS void fillGradient(Mat& img, int delta = 5);
+CV_EXPORTS void smoothBorder(Mat& img, const Scalar& color, int delta = 3);
 
-void printVersionInfo(bool useStdOut = true);
+CV_EXPORTS void printVersionInfo(bool useStdOut = true);
 
 
 // Utility functions
 
-void addDataSearchPath(const std::string& path);
-void addDataSearchSubDirectory(const std::string& subdir);
+CV_EXPORTS void addDataSearchPath(const std::string& path);
+CV_EXPORTS void addDataSearchSubDirectory(const std::string& subdir);
 
 /*! @brief Try to find requested data file
 
@@ -603,7 +603,7 @@ void addDataSearchSubDirectory(const std::string& subdir);
   - modulename from TS::init()
 
  */
-std::string findDataFile(const std::string& relative_path, bool required = true);
+CV_EXPORTS std::string findDataFile(const std::string& relative_path, bool required = true);
 
 
 #ifndef __CV_TEST_EXEC_ARGS

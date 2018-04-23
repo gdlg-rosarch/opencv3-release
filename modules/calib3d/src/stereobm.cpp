@@ -1108,7 +1108,7 @@ public:
         int FILTERED = (params.minDisparity - 1) << disp_shift;
 
 #ifdef HAVE_OPENCL
-        if(ocl::isOpenCLActivated() && disparr.isUMat() && params.textureThreshold == 0)
+        if(ocl::useOpenCL() && disparr.isUMat() && params.textureThreshold == 0)
         {
             UMat left, right;
             if(ocl_prefiltering(leftarr, rightarr, left, right, &params))

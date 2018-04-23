@@ -54,9 +54,9 @@ namespace dnn
 class PriorBoxLayerImpl : public PriorBoxLayer
 {
 public:
-    static bool getParameterDict(const LayerParams &params,
-                                 const std::string &parameterName,
-                                 DictValue& result)
+    bool getParameterDict(const LayerParams &params,
+                          const std::string &parameterName,
+                          DictValue& result)
     {
         if (!params.has(parameterName))
         {
@@ -98,8 +98,7 @@ public:
     {
         DictValue aspectRatioParameter;
         bool aspectRatioRetieved = getParameterDict(params, "aspect_ratio", aspectRatioParameter);
-        if (!aspectRatioRetieved)
-            return;
+        CV_Assert(aspectRatioRetieved);
 
         for (int i = 0; i < aspectRatioParameter.size(); ++i)
         {
@@ -125,20 +124,18 @@ public:
         }
     }
 
-    static void getParams(const std::string& name, const LayerParams &params,
-                          std::vector<float>* values)
+    void getScales(const LayerParams &params)
     {
-        DictValue dict;
-        if (getParameterDict(params, name, dict))
+        DictValue scalesParameter;
+        bool scalesRetieved = getParameterDict(params, "scales", scalesParameter);
+        if (scalesRetieved)
         {
-            values->resize(dict.size());
-            for (int i = 0; i < dict.size(); ++i)
+            _scales.resize(scalesParameter.size());
+            for (int i = 0; i < scalesParameter.size(); ++i)
             {
-                (*values)[i] = dict.get<float>(i);
+                _scales[i] = scalesParameter.get<float>(i);
             }
         }
-        else
-            values->clear();
     }
 
     void getVariance(const LayerParams &params)
@@ -180,31 +177,20 @@ public:
         : _boxWidth(0), _boxHeight(0)
     {
         setParamsFrom(params);
-        _minSize = getParameter<float>(params, "min_size", 0, false, 0);
-        _flip = getParameter<bool>(params, "flip", 0, false, true);
-        _clip = getParameter<bool>(params, "clip", 0, false, true);
+        _minSize = getParameter<unsigned>(params, "min_size");
+        CV_Assert(_minSize > 0);
+
+        _flip = getParameter<bool>(params, "flip");
+        _clip = getParameter<bool>(params, "clip");
 
         _scales.clear();
         _aspectRatios.clear();
 
         getAspectRatios(params);
         getVariance(params);
-        getParams("scales", params, &_scales);
-        getParams("width", params, &_widths);
-        getParams("height", params, &_heights);
-        _explicitSizes = !_widths.empty();
-        CV_Assert(_widths.size() == _heights.size());
+        getScales(params);
 
-        if (_explicitSizes)
-        {
-            CV_Assert(_aspectRatios.empty(), !params.has("min_size"), !params.has("max_size"));
-            _numPriors = _widths.size();
-        }
-        else
-        {
-            CV_Assert(!_aspectRatios.empty(), _minSize > 0);
-            _numPriors = _aspectRatios.size() + 1;  // + 1 for an aspect ratio 1.0
-        }
+        _numPriors = _aspectRatios.size() + 1;  // + 1 for an aspect ratio 1.0
 
         _maxSize = -1;
         if (params.has("max_size"))
@@ -230,20 +216,14 @@ public:
           _stepY = 0;
           _stepX = 0;
         }
-        if (params.has("offset_h") || params.has("offset_w"))
+        if(params.has("additional_y_offset"))
         {
-            CV_Assert(!params.has("offset"), params.has("offset_h"), params.has("offset_w"));
-            getParams("offset_h", params, &_offsetsY);
-            getParams("offset_w", params, &_offsetsX);
-            CV_Assert(_offsetsX.size() == _offsetsY.size());
-            _numPriors *= std::max((size_t)1, 2 * (_offsetsX.size() - 1));
+          _additional_y_offset = getParameter<bool>(params, "additional_y_offset");
+          if(_additional_y_offset)
+            _numPriors *= 2;
         }
         else
-        {
-            float offset = getParameter<float>(params, "offset", 0, false, 0.5);
-            _offsetsX.assign(1, offset);
-            _offsetsY.assign(1, offset);
-        }
+          _additional_y_offset = false;
     }
 
     bool getMemoryShapes(const std::vector<MatShape> &inputs,
@@ -269,20 +249,12 @@ public:
         return false;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr)
-    {
-        CV_TRACE_FUNCTION();
-        CV_TRACE_ARG_VALUE(name, "name", name.c_str());
-
-        Layer::forward_fallback(inputs_arr, outputs_arr, internals_arr);
-    }
-
     void forward(std::vector<Mat*> &inputs, std::vector<Mat> &outputs, std::vector<Mat> &internals)
     {
         CV_TRACE_FUNCTION();
         CV_TRACE_ARG_VALUE(name, "name", name.c_str());
 
-        size_t real_numPriors = _numPriors / pow(2, _offsetsX.size() - 1);
+        size_t real_numPriors = _additional_y_offset ? _numPriors / 2 : _numPriors;
         if (_scales.empty())
             _scales.resize(real_numPriors, 1.0f);
         else
@@ -306,64 +278,93 @@ public:
         int _outChannelSize = _layerHeight * _layerWidth * _numPriors * 4;
 
         float* outputPtr = outputs[0].ptr<float>();
+
+        // first prior: aspect_ratio = 1, size = min_size
+        int idx = 0;
         for (size_t h = 0; h < _layerHeight; ++h)
         {
             for (size_t w = 0; w < _layerWidth; ++w)
             {
-                // first prior: aspect_ratio = 1, size = min_size
-                if (_explicitSizes)
-                {
-                    _boxWidth = _widths[0] * _scales[0];
-                    _boxHeight = _heights[0] * _scales[0];
-                }
-                else
-                    _boxWidth = _boxHeight = _minSize * _scales[0];
+                _boxWidth = _boxHeight = _minSize * _scales[0];
 
-                for (int i = 0; i < _offsetsX.size(); ++i)
+                float center_x = (w + 0.5) * stepX;
+                float center_y = (h + 0.5) * stepY;
+                // xmin
+                outputPtr[idx++] = (center_x - _boxWidth / 2.) / _imageWidth;
+                // ymin
+                outputPtr[idx++] = (center_y - _boxHeight / 2.) / _imageHeight;
+                // xmax
+                outputPtr[idx++] = (center_x + _boxWidth / 2.) / _imageWidth;
+                // ymax
+                outputPtr[idx++] = (center_y + _boxHeight / 2.) / _imageHeight;
+
+                if(_additional_y_offset)
                 {
-                    float center_x = (w + _offsetsX[i]) * stepX;
-                    float center_y = (h + _offsetsY[i]) * stepY;
-                    outputPtr = addPrior(center_x, center_y, _boxWidth, _boxHeight, _imageWidth, _imageHeight, outputPtr);
+                  float center_y_offset_1 = (h + 1.0) * stepY;
+                  // xmin
+                  outputPtr[idx++] = (center_x - _boxWidth / 2.) / _imageWidth;
+                  // ymin
+                  outputPtr[idx++] = (center_y_offset_1 - _boxHeight / 2.) / _imageHeight;
+                  // xmax
+                  outputPtr[idx++] = (center_x + _boxWidth / 2.) / _imageWidth;
+                  // ymax
+                  outputPtr[idx++] = (center_y_offset_1 + _boxHeight / 2.) / _imageHeight;
                 }
+
                 if (_maxSize > 0)
                 {
                     // second prior: aspect_ratio = 1, size = sqrt(min_size * max_size)
                     _boxWidth = _boxHeight = sqrt(_minSize * _maxSize) * _scales[1];
-                    for (int i = 0; i < _offsetsX.size(); ++i)
+                    // xmin
+                    outputPtr[idx++] = (center_x - _boxWidth / 2.) / _imageWidth;
+                    // ymin
+                    outputPtr[idx++] = (center_y - _boxHeight / 2.) / _imageHeight;
+                    // xmax
+                    outputPtr[idx++] = (center_x + _boxWidth / 2.) / _imageWidth;
+                    // ymax
+                    outputPtr[idx++] = (center_y + _boxHeight / 2.) / _imageHeight;
+
+                    if(_additional_y_offset)
                     {
-                        float center_x = (w + _offsetsX[i]) * stepX;
-                        float center_y = (h + _offsetsY[i]) * stepY;
-                        outputPtr = addPrior(center_x, center_y, _boxWidth, _boxHeight, _imageWidth, _imageHeight, outputPtr);
+                      float center_y_offset_1 = (h + 1.0) * stepY;
+                      // xmin
+                      outputPtr[idx++] = (center_x - _boxWidth / 2.) / _imageWidth;
+                      // ymin
+                      outputPtr[idx++] = (center_y_offset_1 - _boxHeight / 2.) / _imageHeight;
+                      // xmax
+                      outputPtr[idx++] = (center_x + _boxWidth / 2.) / _imageWidth;
+                      // ymax
+                      outputPtr[idx++] = (center_y_offset_1 + _boxHeight / 2.) / _imageHeight;
                     }
                 }
 
                 // rest of priors
-                CV_Assert(_aspectRatios.empty() || (_maxSize > 0 ? 2 : 1) + _aspectRatios.size() == _scales.size());
+                CV_Assert((_maxSize > 0 ? 2 : 1) + _aspectRatios.size() == _scales.size());
                 for (size_t r = 0; r < _aspectRatios.size(); ++r)
                 {
                     float ar = _aspectRatios[r];
                     float scale = _scales[(_maxSize > 0 ? 2 : 1) + r];
                     _boxWidth = _minSize * sqrt(ar) * scale;
                     _boxHeight = _minSize / sqrt(ar) * scale;
-                    for (int i = 0; i < _offsetsX.size(); ++i)
+                    // xmin
+                    outputPtr[idx++] = (center_x - _boxWidth / 2.) / _imageWidth;
+                    // ymin
+                    outputPtr[idx++] = (center_y - _boxHeight / 2.) / _imageHeight;
+                    // xmax
+                    outputPtr[idx++] = (center_x + _boxWidth / 2.) / _imageWidth;
+                    // ymax
+                    outputPtr[idx++] = (center_y + _boxHeight / 2.) / _imageHeight;
+                    if(_additional_y_offset)
                     {
-                        float center_x = (w + _offsetsX[i]) * stepX;
-                        float center_y = (h + _offsetsY[i]) * stepY;
-                        outputPtr = addPrior(center_x, center_y, _boxWidth, _boxHeight, _imageWidth, _imageHeight, outputPtr);
-                    }
-                }
-
-                // rest of sizes
-                CV_Assert(_widths.empty() || _widths.size() == _scales.size());
-                for (size_t i = 1; i < _widths.size(); ++i)
-                {
-                    _boxWidth = _widths[i] * _scales[i];
-                    _boxHeight = _heights[i] * _scales[i];
-                    for (int j = 0; j < _offsetsX.size(); ++j)
-                    {
-                        float center_x = (w + _offsetsX[j]) * stepX;
-                        float center_y = (h + _offsetsY[j]) * stepY;
-                        outputPtr = addPrior(center_x, center_y, _boxWidth, _boxHeight, _imageWidth, _imageHeight, outputPtr);
+                      float center_y_offset_1 = (h + 1.0) * stepY;
+                      // xmin
+                      outputPtr[idx++] = (center_x - _boxWidth / 2.) / _imageWidth;
+                      // ymin
+                      outputPtr[idx++] = (center_y_offset_1 - _boxHeight / 2.) / _imageHeight;
+                      // xmax
+                      outputPtr[idx++] = (center_x + _boxWidth / 2.) / _imageWidth;
+                      // ymax
+                      outputPtr[idx++] = (center_y_offset_1 + _boxHeight / 2.) / _imageHeight;
                     }
                 }
             }
@@ -417,7 +418,6 @@ public:
         return flops;
     }
 
-private:
     float _minSize;
     float _maxSize;
 
@@ -429,29 +429,15 @@ private:
     std::vector<float> _aspectRatios;
     std::vector<float> _variance;
     std::vector<float> _scales;
-    std::vector<float> _widths;
-    std::vector<float> _heights;
-    std::vector<float> _offsetsX;
-    std::vector<float> _offsetsY;
 
     bool _flip;
     bool _clip;
-    bool _explicitSizes;
+    bool _additional_y_offset;
 
     size_t _numPriors;
 
     static const size_t _numAxes = 4;
     static const std::string _layerName;
-
-    static float* addPrior(float center_x, float center_y, float width, float height,
-                           float imgWidth, float imgHeight, float* dst)
-    {
-        dst[0] = (center_x - width * 0.5f) / imgWidth;    // xmin
-        dst[1] = (center_y - height * 0.5f) / imgHeight;  // ymin
-        dst[2] = (center_x + width * 0.5f) / imgWidth;    // xmax
-        dst[3] = (center_y + height * 0.5f) / imgHeight;  // ymax
-        return dst + 4;
-    }
 };
 
 const std::string PriorBoxLayerImpl::_layerName = std::string("PriorBox");

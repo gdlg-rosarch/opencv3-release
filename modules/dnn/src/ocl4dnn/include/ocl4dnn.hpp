@@ -73,12 +73,6 @@ struct OCL4DNNConvConfig
     bool bias_term; // = false;
 };
 
-typedef enum {
-    OCL4DNN_CONV_FUSED_ACTIV_NONE                 = 0,
-    OCL4DNN_CONV_FUSED_ACTIV_RELU                 = 1,
-    OCL4DNN_CONV_FUSED_ACTIV_PRELU                = 2,
-    OCL4DNN_CONV_FUSED_ACTIV_POWER                = 3
-} ocl4dnnFusedActiv_t;
 
 template<typename Dtype>
 class OCL4DNNConvSpatial
@@ -86,15 +80,9 @@ class OCL4DNNConvSpatial
     public:
         explicit OCL4DNNConvSpatial(OCL4DNNConvConfig config);
         ~OCL4DNNConvSpatial();
-        bool Forward(const UMat& bottom_data,
-                     const UMat& bottom_data2,
-                     const UMat& weight,
+        bool Forward(const UMat& bottom_data, const UMat& weight,
                      const UMat& bias,
                      UMat& top_data, int32_t batch_size);
-        void setActivReLU(bool fuse_activ, float slope);
-        void setActivPReLU(bool fuse_activ, std::vector<float> &slope);
-        void setActivPower(bool fuse_activ, float power);
-        void setBias(bool bias_term);
 
     private:
         struct kernelConfig
@@ -206,9 +194,9 @@ class OCL4DNNConvSpatial
                                      int32_t blockWidth,
                                      int32_t blockHeight,
                                      int32_t blockDepth);
-        bool createIDLFKernel(int32_t blockWidth,
-                              int32_t blockHeight,
-                              int32_t blockDepth);
+        bool setupIDLF(int32_t blockWidth,
+                       int32_t blockHeight,
+                       int32_t blockDepth);
         bool createBasicKernel(int32_t blockWidth,
                                int32_t blockHeight,
                                int32_t blockDepth);
@@ -220,7 +208,8 @@ class OCL4DNNConvSpatial
         bool convolve(const UMat &bottom, UMat &top,
                       const UMat &weight, const UMat &bias,
                       int32_t numImages,
-                      kernelConfig* config);
+                      kernelConfig* config,
+                      const cv::ocl::Queue& queue);
         float timedConvolve(const UMat &bottom, UMat &top,
                             const UMat &weight, const UMat &bias,
                             int32_t numImages, kernelConfig* config);
@@ -255,13 +244,10 @@ class OCL4DNNConvSpatial
                                  int lx, int ly, int lz,
                                  bool swizzle, bool nullLocal);
         void generateTunerItems(std::vector< cv::Ptr<tunerParam> > &tunerItems);
-        void setFusionDefine(ocl4dnnFusedActiv_t fused_activ, bool fused_eltwise);
-        void setFusionArg(ocl4dnnFusedActiv_t fused_activ, bool fused_eltwise, ocl::Kernel &kernel, cl_uint &argIdx);
 
         int32_t group_;
         bool bias_term_;
         UMat swizzled_weights_umat;
-        UMat bottom_data2_;
 
         int32_t bottom_index_;
         int32_t output_h_;
@@ -305,11 +291,6 @@ class OCL4DNNConvSpatial
         std::stringstream options_;
         cv::ocl::ProgramSource src_;
         int32_t prev_kernel_type_;
-        float negative_slope_;
-        UMat negative_slope_umat_;
-        ocl4dnnFusedActiv_t fused_activ_;
-        float power_;
-        bool fused_eltwise_;
 };
 
 typedef enum {
@@ -351,6 +332,8 @@ class OCL4DNNPool
                      UMat& top_data,
                      UMat& top_mask);
     private:
+        UMat mask_idx_;
+
         // Pooling parameters
         std::vector<int32_t> pad_;
         std::vector<int32_t> stride_;
@@ -360,6 +343,7 @@ class OCL4DNNPool
 
         ocl4dnnPoolingMethod_t pool_method_;
         int32_t count_;
+        int32_t batch_size_;
         int32_t channels_;
         int32_t kernel_h_;
         int32_t kernel_w_;

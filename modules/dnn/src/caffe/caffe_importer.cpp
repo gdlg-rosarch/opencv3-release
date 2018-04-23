@@ -42,6 +42,8 @@
 #include "../precomp.hpp"
 
 #ifdef HAVE_PROTOBUF
+#include "caffe.pb.h"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -90,17 +92,6 @@ public:
 
         if (caffeModel && caffeModel[0])
             ReadNetParamsFromBinaryFileOrDie(caffeModel, &netBinary);
-    }
-
-    CaffeImporter(const char *dataProto, size_t lenProto,
-                  const char *dataModel, size_t lenModel)
-    {
-        CV_TRACE_FUNCTION();
-
-        ReadNetParamsFromTextBufferOrDie(dataProto, lenProto, &net);
-
-        if (dataModel != NULL && lenModel > 0)
-            ReadNetParamsFromBinaryBufferOrDie(dataModel, lenModel, &netBinary);
     }
 
     void addParam(const Message &msg, const FieldDescriptor *field, cv::dnn::LayerParams &params)
@@ -327,12 +318,8 @@ public:
 
             if (type == "Input")
             {
-                for (int outNum = 0; outNum < layer.top_size(); outNum++)
-                {
-                    addOutput(layer, 0, outNum);
-                    addedBlobs.back().outNum = netInputs.size();
-                    netInputs.push_back(addedBlobs.back().name);
-                }
+                addedBlobs.push_back(BlobNote(name, 0, netInputs.size()));
+                netInputs.push_back(name);
                 continue;
             }
 
@@ -408,15 +395,6 @@ Ptr<Importer> createCaffeImporter(const String &prototxt, const String &caffeMod
 Net readNetFromCaffe(const String &prototxt, const String &caffeModel /*= String()*/)
 {
     CaffeImporter caffeImporter(prototxt.c_str(), caffeModel.c_str());
-    Net net;
-    caffeImporter.populateNet(net);
-    return net;
-}
-
-Net readNetFromCaffe(const char *bufferProto, size_t lenProto,
-                     const char *bufferModel, size_t lenModel)
-{
-    CaffeImporter caffeImporter(bufferProto, lenProto, bufferModel, lenModel);
     Net net;
     caffeImporter.populateNet(net);
     return net;

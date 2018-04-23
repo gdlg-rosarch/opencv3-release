@@ -121,7 +121,7 @@ bool CV_ECC_Test_Translation::testTranslation(int from)
         return false;
     }
     Mat testImg;
-    resize(img, testImg, Size(216, 216), 0, 0, INTER_LINEAR_EXACT);
+    resize(img, testImg, Size(216, 216));
 
     cv::RNG rng = ts->get_rng();
 
@@ -196,7 +196,7 @@ bool CV_ECC_Test_Euclidean::testEuclidean(int from)
         return false;
     }
     Mat testImg;
-    resize(img, testImg, Size(216, 216), 0, 0, INTER_LINEAR_EXACT);
+    resize(img, testImg, Size(216, 216));
 
     cv::RNG rng = ts->get_rng();
 
@@ -270,7 +270,7 @@ bool CV_ECC_Test_Affine::testAffine(int from)
         return false;
     }
     Mat testImg;
-    resize(img, testImg, Size(216, 216), 0, 0, INTER_LINEAR_EXACT);
+    resize(img, testImg, Size(216, 216));
 
     cv::RNG rng = ts->get_rng();
 
@@ -346,7 +346,7 @@ bool CV_ECC_Test_Homography::testHomography(int from)
         return false;
     }
     Mat testImg;
-    resize(img, testImg, Size(216, 216), 0, 0, INTER_LINEAR_EXACT);
+    resize(img, testImg, Size(216, 216));
 
     cv::RNG rng = ts->get_rng();
 
@@ -418,7 +418,7 @@ bool CV_ECC_Test_Mask::testMask(int from)
         return false;
     }
     Mat scaledImage;
-    resize(img, scaledImage, Size(216, 216), 0, 0, INTER_LINEAR_EXACT );
+    resize(img, scaledImage, Size(216, 216));
 
     Mat_<float> testImg;
     scaledImage.convertTo(testImg, testImg.type());

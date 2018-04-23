@@ -14,8 +14,6 @@ Implementation of Batch Normalization layer.
 #include "op_halide.hpp"
 #include <opencv2/dnn/shape_utils.hpp>
 
-#include <iostream>
-
 namespace cv
 {
 namespace dnn
@@ -57,14 +55,6 @@ public:
         return false;
     }
 
-    void forward(InputArrayOfArrays inputs_arr, OutputArrayOfArrays outputs_arr, OutputArrayOfArrays internals_arr)
-    {
-        CV_TRACE_FUNCTION();
-        CV_TRACE_ARG_VALUE(name, "name", name.c_str());
-
-        Layer::forward_fallback(inputs_arr, outputs_arr, internals_arr);
-    }
-
     void forward(std::vector<Mat*> &inputs, std::vector<Mat> &outputs, std::vector<Mat> &internals)
     {
         CV_TRACE_FUNCTION();
@@ -96,20 +86,7 @@ public:
                 for(int i_wh = 0; i_wh < wh_area; i_wh++)
                 {
                     int index = idxptr[i_wh];
-                    if (!(0 <= index && index < outPlaneTotal))
-                    {
-                        std::cerr
-                            << "i_n=" << i_n << std::endl
-                            << "i_c=" << i_c << std::endl
-                            << "i_wh=" << i_wh << std::endl
-                            << "index=" << index << std::endl
-                            << "outPlaneTotal=" << outPlaneTotal << std::endl
-                            << "input.size=" << input.size << std::endl
-                            << "indices.size=" << indices.size << std::endl
-                            << "outBlob=" << outBlob.size << std::endl
-                            ;
-                        CV_Assert(0 <= index && index < outPlaneTotal);
-                    }
+                    CV_Assert(0 <= index && index < outPlaneTotal);
                     outptr[index] = inptr[i_wh];
                 }
             }

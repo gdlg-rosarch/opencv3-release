@@ -141,15 +141,15 @@ static bool get_capture_debug_flag()
 #define TRY_OPEN(capture, backend_func) \
 { \
     if (!capture) \
-        CV_TRY { \
+        try { \
             if (get_capture_debug_flag()) fprintf(stderr, "VIDEOIO(%s): trying ...\n", #backend_func); \
             capture = backend_func; \
             if (get_capture_debug_flag()) fprintf(stderr, "VIDEOIO(%s): result=%p ...\n", #backend_func, capture); \
-        } CV_CATCH (cv::Exception, e) { \
+        } catch (const cv::Exception& e) { \
             fprintf(stderr, "VIDEOIO(%s): raised OpenCV exception:\n\n%s\n", #backend_func, e.what()); \
-        } CV_CATCH (std::exception, e) { \
+        } catch (const std::exception& e) { \
             fprintf(stderr, "VIDEOIO(%s): raised C++ exception:\n\n%s\n", #backend_func, e.what()); \
-        } CV_CATCH_ALL { \
+        } catch (...) { \
             fprintf(stderr, "VIDEOIO(%s): raised unknown C++ exception!\n\n", #backend_func); \
         } \
 }
@@ -527,35 +527,49 @@ static Ptr<IVideoCapture> IVideoCapture_create(int index)
 }
 
 
-static Ptr<IVideoCapture> IVideoCapture_create(const String& filename, int apiPreference)
+static Ptr<IVideoCapture> IVideoCapture_create(const String& filename)
 {
-    bool useAny = (apiPreference == CAP_ANY);
-    Ptr<IVideoCapture> capture;
-#ifdef HAVE_GPHOTO2
-    if (useAny || apiPreference == CAP_GPHOTO2)
+    int  domains[] =
     {
-        capture = createGPhoto2Capture(filename);
-        if (capture && capture->isOpened())
-            return capture;
-    }
+        CAP_ANY,
+#ifdef HAVE_GPHOTO2
+        CAP_GPHOTO2,
 #endif
 #ifdef HAVE_MFX
-    if (useAny || apiPreference == CAP_INTEL_MFX)
-    {
-        capture = makePtr<VideoCapture_IntelMFX>(filename);
-        if (capture && capture->isOpened())
-            return capture;
-    }
+        CAP_INTEL_MFX,
 #endif
-    if (useAny || apiPreference == CAP_OPENCV_MJPEG)
+        -1, -1
+    };
+
+    // try every possibly installed camera API
+    for (int i = 0; domains[i] >= 0; i++)
     {
-        capture = createMotionJpegCapture(filename);
+        Ptr<IVideoCapture> capture;
+
+        switch (domains[i])
+        {
+        case CAP_ANY:
+            capture = createMotionJpegCapture(filename);
+            break;
+#ifdef HAVE_GPHOTO2
+        case CAP_GPHOTO2:
+            capture = createGPhoto2Capture(filename);
+            break;
+#endif
+#ifdef HAVE_MFX
+        case CAP_INTEL_MFX:
+            capture = makePtr<VideoCapture_IntelMFX>(filename);
+            break;
+#endif
+        }
+
         if (capture && capture->isOpened())
+        {
             return capture;
+        }
     }
-    if (capture && !capture->isOpened())
-        capture.release();
-    return capture;
+    // failed open a camera
+    return Ptr<IVideoCapture>();
 }
 
 static Ptr<IVideoWriter> IVideoWriter_create(const String& filename, int apiPreference, int _fourcc, double fps, Size frameSize, bool isColor)
@@ -611,7 +625,7 @@ bool VideoCapture::open(const String& filename, int apiPreference)
     CV_TRACE_FUNCTION();
 
     if (isOpened()) release();
-    icap = IVideoCapture_create(filename, apiPreference);
+    icap = IVideoCapture_create(filename);
     if (!icap.empty())
         return true;
 

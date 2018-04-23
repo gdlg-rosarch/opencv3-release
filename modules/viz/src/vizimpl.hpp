@@ -88,7 +88,7 @@ public:
     void resetCamera();
 
     void setViewerPose(const Affine3d &pose);
-    Affine3d getViewerPose() const;
+    Affine3d getViewerPose();
 
     void convertToWindowCoordinates(const Point3d &pt, Point3d &window_coord);
     void converTo3DRay(const Point3d &window_coord, Point3d &origin, Vec3d &direction);

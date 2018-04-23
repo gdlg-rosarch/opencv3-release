@@ -12,9 +12,6 @@
 namespace cv
 {
 
-/**
- * @deprecated Please use direct instantiation of Feature2D classes
- */
 class CV_EXPORTS_AS(FeatureDetector) javaFeatureDetector
 {
 public:
@@ -90,11 +87,8 @@ public:
         DYNAMIC_AKAZE      = DYNAMICDETECTOR + AKAZE
     };
 
-    /**
-     * supported: FAST STAR SIFT SURF ORB MSER GFTT HARRIS BRISK AKAZE Grid(XXXX) Pyramid(XXXX) Dynamic(XXXX)
-     * not supported: SimpleBlob, Dense
-     * @deprecated
-     */
+    //supported: FAST STAR SIFT SURF ORB MSER GFTT HARRIS BRISK AKAZE Grid(XXXX) Pyramid(XXXX) Dynamic(XXXX)
+    //not supported: SimpleBlob, Dense
     CV_WRAP static Ptr<javaFeatureDetector> create( int detectorType )
     {
         //String name;
@@ -185,9 +179,6 @@ private:
     Ptr<FeatureDetector> wrapped;
 };
 
-/**
- * @deprecated
- */
 class CV_EXPORTS_AS(DescriptorExtractor) javaDescriptorExtractor
 {
 public:

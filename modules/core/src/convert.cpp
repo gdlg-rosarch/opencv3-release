@@ -44,7 +44,6 @@
 #include "precomp.hpp"
 
 #include "opencl_kernels_core.hpp"
-
 #include "convert.hpp"
 
 #include "opencv2/core/openvx/ovx_defs.hpp"
@@ -898,8 +897,7 @@ void cv::extractChannel(InputArray _src, OutputArray _dst, int coi)
     CV_Assert( 0 <= coi && coi < cn );
     int ch[] = { coi, 0 };
 
-#ifdef HAVE_OPENCL
-    if (ocl::isOpenCLActivated() && _src.dims() <= 2 && _dst.isUMat())
+    if (ocl::useOpenCL() && _src.dims() <= 2 && _dst.isUMat())
     {
         UMat src = _src.getUMat();
         _dst.create(src.dims, &src.size[0], depth);
@@ -907,7 +905,6 @@ void cv::extractChannel(InputArray _src, OutputArray _dst, int coi)
         mixChannels(std::vector<UMat>(1, src), std::vector<UMat>(1, dst), ch, 1);
         return;
     }
-#endif
 
     Mat src = _src.getMat();
     _dst.create(src.dims, &src.size[0], depth);
@@ -928,14 +925,12 @@ void cv::insertChannel(InputArray _src, InputOutputArray _dst, int coi)
     CV_Assert( 0 <= coi && coi < dcn && scn == 1 );
 
     int ch[] = { 0, coi };
-#ifdef HAVE_OPENCL
-    if (ocl::isOpenCLActivated() && _src.dims() <= 2 && _dst.isUMat())
+    if (ocl::useOpenCL() && _src.dims() <= 2 && _dst.isUMat())
     {
         UMat src = _src.getUMat(), dst = _dst.getUMat();
         mixChannels(std::vector<UMat>(1, src), std::vector<UMat>(1, dst), ch, 1);
         return;
     }
-#endif
 
     Mat src = _src.getMat(), dst = _dst.getMat();
 

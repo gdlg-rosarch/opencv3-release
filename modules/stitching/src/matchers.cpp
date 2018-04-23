@@ -42,8 +42,6 @@
 
 #include "precomp.hpp"
 
-#include "opencv2/core/opencl/ocl_defs.hpp"
-
 using namespace cv;
 using namespace cv::detail;
 using namespace cv::cuda;
@@ -196,7 +194,7 @@ void CpuMatcher::match(const ImageFeatures &features1, const ImageFeatures &feat
 
     Ptr<cv::DescriptorMatcher> matcher;
 #if 0 // TODO check this
-    if (ocl::isOpenCLActivated())
+    if (ocl::useOpenCL())
     {
         matcher = makePtr<BFMatcher>((int)NORM_L2);
     }
@@ -392,12 +390,10 @@ void FeaturesFinder::operator ()(InputArrayOfArrays images, std::vector<ImageFea
 
 bool FeaturesFinder::isThreadSafe() const
 {
-#ifdef HAVE_OPENCL
-    if (ocl::isOpenCLActivated())
+    if (ocl::useOpenCL())
     {
         return false;
     }
-#endif
     if (dynamic_cast<const SurfFeaturesFinder*>(this))
     {
         return true;
